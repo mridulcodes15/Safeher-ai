@@ -1,0 +1,5 @@
+.env
+*.pyc
+__pycache__/
+sample_audio.mp4
+sample_image.png
