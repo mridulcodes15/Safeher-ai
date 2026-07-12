@@ -1,18 +1,28 @@
-# Environment files
+# Environment files / secrets
 .env
 *.env
+mock_service_account.json
 
-# Python
+# Python virtual environments
+venv/
+.venv/
+ENV/
+env/
+ENV/local/
+ENV/bin/
+
+# Python bytecode / caches
 __pycache__/
 *.pyc
 *.pyo
+*.py[cod]
+*$py.class
 
-# Virtual environments
-venv/
-.venv/
-
-# VS Code
+# IDEs and OS files
 .vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
