@@ -1,0 +1,6 @@
+{
+  "name": "Safety Vault",
+  "description": "A secure human safety and evidence-vault application featuring a disguised utility app facade and a high-tech tactical security vault.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
