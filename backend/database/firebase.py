@@ -8,7 +8,7 @@ logger = logging.getLogger("uvicorn")
 
 def initialize_firebase() -> firebase_admin.App | None:
     """
-    Initializes the Firebase Admin SDK using variables loaded from the environment.
+    Initializes the Firebase Acode .dmin SDK using variables loaded from the environment.
     
     Checks if Firebase has already been initialized, loads credentials from the
     path specified in `FIREBASE_CREDENTIALS_PATH`, and configures the Storage bucket.

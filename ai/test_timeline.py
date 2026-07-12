@@ -1,4 +1,4 @@
-from timeline.timeline import TimelineGenerator
+from ai.timeline.timeline import TimelineGenerator
 
 timeline = TimelineGenerator()
 

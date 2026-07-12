@@ -1,4 +1,4 @@
-from speech_to_text.speech import SpeechToText
+from ai.speech_to_text.speech import SpeechToText
 
 stt = SpeechToText("small")
 

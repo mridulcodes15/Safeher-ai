@@ -1,4 +1,4 @@
-from config import client
+from ai.config import client
 
 response = client.models.generate_content(
     model="gemini-flash-latest",

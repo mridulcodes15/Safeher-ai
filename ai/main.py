@@ -1,4 +1,4 @@
-from ai_service import AIService
+from ai.ai_service import AIService
 
 IMAGE_PATH = "sample_image.png"
 AUDIO_PATH = "sample_audio.mp4"

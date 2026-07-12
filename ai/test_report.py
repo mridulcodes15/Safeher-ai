@@ -1,4 +1,4 @@
-from report_generation.report import ReportGenerator
+from ai.report_generation.report import ReportGenerator
 
 report = ReportGenerator()
 

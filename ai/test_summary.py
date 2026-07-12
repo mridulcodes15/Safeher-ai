@@ -1,4 +1,4 @@
-from evidence_summary.summary import EvidenceSummarizer
+from ai.evidence_summary.summary import EvidenceSummarizer
 
 summarizer = EvidenceSummarizer()
 

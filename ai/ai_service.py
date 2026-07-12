@@ -1,11 +1,11 @@
 import os
 
-from ocr.ocr import OCRReader
-from speech_to_text.speech import SpeechToText
-from evidence_summary.summary import EvidenceSummarizer
-from timeline.timeline import TimelineGenerator
-from risk_assessment.risk import RiskAssessment
-from report_generation.report import ReportGenerator
+from ai.ocr.ocr import OCRReader
+from ai.speech_to_text.speech import SpeechToText
+from ai.evidence_summary.summary import EvidenceSummarizer
+from ai.timeline.timeline import TimelineGenerator
+from ai.risk_assessment.risk import RiskAssessment
+from ai.report_generation.report import ReportGenerator
 
 
 class AIService:

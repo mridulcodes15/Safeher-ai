@@ -1,4 +1,4 @@
-from risk_assessment.risk import RiskAssessment
+from ai.risk_assessment.risk import RiskAssessment
 
 risk = RiskAssessment()
 

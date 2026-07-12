@@ -1,4 +1,4 @@
-from config import client
+from ai.config import client
 
 
 class EvidenceSummarizer:

@@ -1,4 +1,4 @@
-from ocr.ocr import OCRReader
+from ai.ocr.ocr import OCRReader
 
 ocr = OCRReader()
 
