@@ -1,48 +1,35 @@
-from speech_to_text.speech import SpeechToText
-from ocr.ocr import OCRReader
-from evidence_summary.summary import EvidenceSummarizer
-from risk_assessment.risk import RiskAssessment
-from timeline.timeline import TimelineGenerator
-from report_generation.report import ReportGenerator
+from ai_service import AIService
+
+IMAGE_PATH = "sample_image.png"
+AUDIO_PATH = "sample_audio.mp4"
 
 
-class SafeHerAI:
-    def __init__(self):
-        print("Initializing SafeHer AI...")
+def main():
+    ai = AIService()
 
-        self.stt = SpeechToText()
-        self.ocr = OCRReader()
-        self.summary = EvidenceSummarizer()
-        self.risk = RiskAssessment()
-        self.timeline = TimelineGenerator()
-        self.report = ReportGenerator()
+    result = ai.analyze_case(
+        image_path=IMAGE_PATH,
+        audio_path=AUDIO_PATH
+    )
 
-        print("SafeHer AI Ready!")
+    print("\n========== OCR ==========\n")
+    print(result["ocr"])
 
-    def speech_to_text(self, audio_path):
-        return self.stt.transcribe(audio_path)
+    print("\n========== SPEECH ==========\n")
+    print(result["speech"])
 
-    def extract_text(self, image_path):
-        return self.ocr.extract_text(image_path)
+    print("\n========== SUMMARY ==========\n")
+    print(result["summary"])
 
-    def summarize(self, text):
-        return self.summary.summarize(text)
+    print("\n========== TIMELINE ==========\n")
+    print(result["timeline"])
 
-    def assess_risk(self, text):
-        return self.risk.assess(text)
+    print("\n========== RISK ==========\n")
+    print(result["risk"])
 
-    def generate_timeline(self, text):
-        return self.timeline.generate(text)
-
-    def generate_report(self, ocr_text, speech_text, summary, risk, timeline):
-        return self.report.generate_report(
-            ocr_text,
-            speech_text,
-            summary,
-            risk,
-            timeline
-        )
+    print("\n========== REPORT ==========\n")
+    print(result["report"])
 
 
 if __name__ == "__main__":
-    ai = SafeHerAI()
+    main()
