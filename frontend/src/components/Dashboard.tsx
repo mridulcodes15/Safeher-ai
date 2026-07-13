@@ -36,7 +36,8 @@ import {
   Users,
   Check,
   FileArchive,
-  Binary
+  Binary,
+  Image
 } from "lucide-react";
 
 // Types for Vault Logs and Weather
@@ -99,11 +100,15 @@ export default function Dashboard({ onLock, onNavigateToGuardian }: DashboardPro
   // AI Incident Report State
   const [incidentText, setIncidentText] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedAudio, setSelectedAudio] = useState<File | null>(null);
   const [analysisResult, setAnalysisResult] = useState<{
-    threatLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-    directives: string[];
-    classification: string;
-    checksum: string;
+    ocr: string;
+    speech: string;
+    summary: string;
+    timeline: string;
+    risk: string;
+    report: string;
   } | null>(null);
 
   // Encrypted Vault State
@@ -349,59 +354,67 @@ export default function Dashboard({ onLock, onNavigateToGuardian }: DashboardPro
     }, 600);
   };
 
-  // Analyze Threat Logic (Local simulator using key phrases)
-  const handleThreatAnalysis = () => {
-    if (!incidentText.trim()) return;
+  // Regex helper to extract risk level from risk assessment text
+  const getRiskLevel = (riskStr: string): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" => {
+    if (!riskStr) return "LOW";
+    const match = riskStr.match(/Risk Level:\s*(Low|Medium|High|Critical)/i);
+    if (match) {
+      const level = match[1].toUpperCase();
+      if (level === "LOW" || level === "MEDIUM" || level === "HIGH" || level === "CRITICAL") {
+        return level;
+      }
+    }
+    const lowerRiskStr = riskStr.toLowerCase();
+    if (lowerRiskStr.includes("critical")) return "CRITICAL";
+    if (lowerRiskStr.includes("high")) return "HIGH";
+    if (lowerRiskStr.includes("medium")) return "MEDIUM";
+    return "LOW";
+  };
+
+  // Analyze Threat Logic (calls FastAPI Backend /ai/analyze)
+  const handleThreatAnalysis = async () => {
+    if (!selectedImage && !selectedAudio) {
+      triggerToast("Please upload at least one image or audio file.");
+      return;
+    }
     setIsAnalyzing(true);
     setAnalysisResult(null);
 
-    setTimeout(() => {
-      const text = incidentText.toLowerCase();
-      let threat: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "LOW";
-      let directives: string[] = [
-        "Record and log all surrounding data.",
-        "Ensure app state remains masked under standard utility theme."
-      ];
-      let classification = "Standard Security Notice";
+    const formData = new FormData();
+    if (selectedImage) {
+      formData.append("image", selectedImage);
+    }
+    if (selectedAudio) {
+      formData.append("audio", selectedAudio);
+    }
 
-      if (text.includes("follow") || text.includes("stalk") || text.includes("car") || text.includes("vehicle")) {
-        threat = "HIGH";
-        classification = "Active Surveillance Target";
-        directives = [
-          "Move immediately to a high-foot-traffic public sanctuary (mall, store).",
-          "Activate GPS location beacon and broadcast raw live feed.",
-          "Avoid remote routes and isolated side-alleys.",
-          "Establish contact with a secondary contact immediately."
-        ];
-      } else if (text.includes("hacked") || text.includes("password") || text.includes("compromise") || text.includes("cyber")) {
-        threat = "MEDIUM";
-        classification = "Digital Asset Integrity Breach";
-        directives = [
-          "De-synchronize local vault from cloud mirrors.",
-          "Use the 'Quick Exit' trigger if your device is physically inspected.",
-          "Initiate rotation of offline master keys.",
-          "Enforce cold-storage state immediately."
-        ];
-      } else if (text.includes("weapon") || text.includes("danger") || text.includes("break") || text.includes("threat") || text.includes("police")) {
-        threat = "CRITICAL";
-        classification = "High-Threat Imminent Hazard";
-        directives = [
-          "Seek visual/physical cover immediately.",
-          "Initiate raw audio recording session immediately (SOS Activated).",
-          "Transmit silent coordinates packet to emergency webhook node.",
-          "Prepare to trigger emergency exit swipe."
-        ];
+    try {
+      const response = await fetch("http://localhost:8000/ai/analyze", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        let errMsg = "Failed to analyze incident.";
+        try {
+          const errJSON = JSON.parse(errText);
+          errMsg = errJSON.detail || errMsg;
+        } catch (_) {}
+        throw new Error(errMsg);
       }
 
-      setAnalysisResult({
-        threatLevel: threat,
-        directives,
-        classification,
-        checksum: "SHA256-" + Math.random().toString(36).substring(2, 10).toUpperCase() + Math.random().toString(36).substring(2, 10).toUpperCase(),
-      });
+      const data = await response.json();
+      setAnalysisResult(data);
+      
+      const level = getRiskLevel(data.risk);
+      triggerToast(`AI Threat Analysis Completed: ${level} risk level detected.`);
+    } catch (err: any) {
+      console.error("AI Analysis Error:", err);
+      triggerToast(`Analysis error: ${err.message || err}`);
+    } finally {
       setIsAnalyzing(false);
-      triggerToast(`AI Threat Analysis Completed: ${threat} threat detected.`);
-    }, 1500);
+    }
   };
 
   // File encryption simulator
@@ -1063,6 +1076,84 @@ export default function Dashboard({ onLock, onNavigateToGuardian }: DashboardPro
                       : "bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-cyan-500/40 focus:bg-white/10"
                   }`}
                 />
+
+                {theme === "dark" && (
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {/* Image Upload */}
+                    <div className="relative font-mono">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="ai-image-upload"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setSelectedImage(e.target.files[0]);
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor="ai-image-upload"
+                        className={`flex flex-col items-center justify-center p-3 rounded-xl border border-dashed transition-all cursor-pointer ${
+                          selectedImage
+                            ? "border-cyan-500/50 bg-cyan-950/20 text-cyan-200"
+                            : "border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-300"
+                        }`}
+                      >
+                        <Image className="w-4 h-4 mb-1.5 text-cyan-400" />
+                        <span className="text-[10px] font-medium truncate max-w-full">
+                          {selectedImage ? selectedImage.name : "Upload Image"}
+                        </span>
+                      </label>
+                      {selectedImage && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImage(null)}
+                          className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full bg-red-500/80 text-white flex items-center justify-center hover:bg-red-600 transition-colors text-[10px] shadow border border-red-400"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Audio Upload */}
+                    <div className="relative font-mono">
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        id="ai-audio-upload"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setSelectedAudio(e.target.files[0]);
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor="ai-audio-upload"
+                        className={`flex flex-col items-center justify-center p-3 rounded-xl border border-dashed transition-all cursor-pointer ${
+                          selectedAudio
+                            ? "border-teal-500/50 bg-teal-950/20 text-teal-200"
+                            : "border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-300"
+                        }`}
+                      >
+                        <Volume2 className="w-4 h-4 mb-1.5 text-teal-400" />
+                        <span className="text-[10px] font-medium truncate max-w-full">
+                          {selectedAudio ? selectedAudio.name : "Upload Audio"}
+                        </span>
+                      </label>
+                      {selectedAudio && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedAudio(null)}
+                          className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full bg-red-500/80 text-white flex items-center justify-center hover:bg-red-600 transition-colors text-[10px] shadow border border-red-400"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
                 
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -1077,7 +1168,7 @@ export default function Dashboard({ onLock, onNavigateToGuardian }: DashboardPro
                         }
                       : handleThreatAnalysis
                   }
-                  disabled={isAnalyzing || !incidentText.trim()}
+                  disabled={isAnalyzing || (theme === "light" ? !incidentText.trim() : (!selectedImage && !selectedAudio))}
                   className={`w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
                     theme === "light"
                       ? "bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-50"
@@ -1108,39 +1199,80 @@ export default function Dashboard({ onLock, onNavigateToGuardian }: DashboardPro
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     className={`rounded-xl border p-3.5 text-xs font-mono space-y-2 ${
-                      analysisResult.threatLevel === "CRITICAL"
+                      getRiskLevel(analysisResult.risk) === "CRITICAL"
                         ? "bg-red-950/20 border-red-500/30 text-red-200"
-                        : analysisResult.threatLevel === "HIGH"
+                        : getRiskLevel(analysisResult.risk) === "HIGH"
                         ? "bg-amber-950/20 border-amber-500/30 text-amber-200"
                         : "bg-cyan-950/30 border-cyan-500/20 text-cyan-200"
                     }`}
                   >
                     <div className="flex justify-between items-center border-b border-white/10 pb-1.5 mb-1.5">
-                      <span className="font-extrabold tracking-wide uppercase text-[10px]">
-                        {analysisResult.classification}
+                      <span className="font-extrabold tracking-wide uppercase text-[10px] truncate max-w-[70%]">
+                        {analysisResult.summary}
                       </span>
                       <span
                         className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                          analysisResult.threatLevel === "CRITICAL"
+                          getRiskLevel(analysisResult.risk) === "CRITICAL"
                             ? "bg-red-500 text-white"
-                            : analysisResult.threatLevel === "HIGH"
+                            : getRiskLevel(analysisResult.risk) === "HIGH"
                             ? "bg-amber-500 text-slate-900"
                             : "bg-cyan-500 text-slate-900"
                         }`}
                       >
-                        {analysisResult.threatLevel}
+                        {getRiskLevel(analysisResult.risk)}
                       </span>
                     </div>
-                    <div className="space-y-1 text-[11px] list-disc list-inside">
-                      {analysisResult.directives.map((dir, idx) => (
-                        <div key={idx} className="flex gap-1.5 items-start">
-                          <span className="text-cyan-400 font-extrabold">›</span>
-                          <span>{dir}</span>
+
+                    <div className="space-y-3 font-sans text-slate-300">
+                      {/* OCR Text */}
+                      {analysisResult.ocr && (
+                        <div>
+                          <div className="text-[10px] font-mono font-extrabold uppercase text-cyan-400">OCR Evidence</div>
+                          <div className="text-[11px] bg-black/20 p-2 rounded border border-white/5 whitespace-pre-wrap font-mono mt-1 opacity-90 max-h-24 overflow-y-auto scrollbar-thin">
+                            {analysisResult.ocr}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="text-[9px] opacity-40 text-right font-sans pt-1">
-                      Checksum: {analysisResult.checksum}
+                      )}
+
+                      {/* Speech Text */}
+                      {analysisResult.speech && (
+                        <div>
+                          <div className="text-[10px] font-mono font-extrabold uppercase text-cyan-400">Speech Transcript</div>
+                          <div className="text-[11px] bg-black/20 p-2 rounded border border-white/5 whitespace-pre-wrap font-mono mt-1 opacity-90 max-h-24 overflow-y-auto scrollbar-thin">
+                            {analysisResult.speech}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Timeline */}
+                      {analysisResult.timeline && (
+                        <div>
+                          <div className="text-[10px] font-mono font-extrabold uppercase text-cyan-400">Timeline of Events</div>
+                          <div className="text-[11px] whitespace-pre-wrap mt-1 opacity-90 leading-relaxed font-mono">
+                            {analysisResult.timeline}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Risk Details */}
+                      {analysisResult.risk && (
+                        <div>
+                          <div className="text-[10px] font-mono font-extrabold uppercase text-cyan-400">Risk Assessment</div>
+                          <div className="text-[11px] whitespace-pre-wrap mt-1 opacity-90 leading-relaxed font-mono">
+                            {analysisResult.risk}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Report */}
+                      {analysisResult.report && (
+                        <div>
+                          <div className="text-[10px] font-mono font-extrabold uppercase text-cyan-400">Incident Report</div>
+                          <div className="text-[11px] bg-black/30 max-h-40 overflow-y-auto p-2.5 rounded border border-white/5 whitespace-pre-wrap font-mono mt-1 opacity-95 scrollbar-thin">
+                            {analysisResult.report}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
