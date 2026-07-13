@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-from database.firebase import initialize_firebase
-from routes import auth, report, upload, ai, pdf, health
+from backend.database.firebase import initialize_firebase
+from backend.routes import auth, report, upload, ai, pdf, health
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

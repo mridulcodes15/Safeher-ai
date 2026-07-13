@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from database.firebase import check_firebase_connection
+from backend.database.firebase import check_firebase_connection
 
 router = APIRouter(
     tags=["System Health"]

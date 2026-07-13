@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import List
 from fastapi import APIRouter, HTTPException, status
-from schemas.report import Report, ReportCreate
+from backend.schemas.report import Report, ReportCreate
 
 router = APIRouter(
     prefix="/reports",
