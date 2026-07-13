@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from backend.database.firebase import initialize_firebase
-from backend.routes import auth, report, upload, ai, pdf, health
+from backend.routes import auth, report, upload, pdf, health
+#ai
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,7 +44,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(report.router)
 app.include_router(upload.router)
-app.include_router(ai.router)
+#app.include_router(ai.router)
 app.include_router(pdf.router)
 app.include_router(health.router)
 
@@ -57,4 +58,4 @@ async def root():
     }
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)

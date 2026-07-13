@@ -25,7 +25,7 @@ async def create_report(report_data: ReportCreate):
     created_at = datetime.now(timezone.utc)
     
     # Construct the stored report dictionary matching the Report schema
-    new_report_dict = report_data.dict()
+    new_report_dict = report_data.model_dump(exclude_none=True)
     new_report_dict.update({
         "report_id": report_id,
         "created_at": created_at

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { createReport } from "../services/reportApi";
 import {
   Sun,
   Moon,
@@ -350,10 +351,37 @@ export default function Dashboard({ onLock, onNavigateToGuardian }: DashboardPro
   };
 
   // Analyze Threat Logic (Local simulator using key phrases)
-  const handleThreatAnalysis = () => {
+  const handleThreatAnalysis = async () => {
     if (!incidentText.trim()) return;
     setIsAnalyzing(true);
     setAnalysisResult(null);
+    const payload = {
+    description: incidentText,
+
+    location: `${lat}, ${lng}`,
+
+    incident_date: new Date().toISOString().split("T")[0],
+
+    incident_time: new Date().toLocaleTimeString("en-GB"),
+
+    people_involved: [],
+
+    evidence_files: []
+    
+  };
+  try {
+
+  const report = await createReport(payload);
+
+  console.log("Created report:", report);
+
+} catch (err) {
+
+  console.error(err);
+
+  triggerToast("Failed to save report.");
+
+}
 
     setTimeout(() => {
       const text = incidentText.toLowerCase();

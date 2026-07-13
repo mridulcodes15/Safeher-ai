@@ -1,2 +1,3 @@
 # SafeHer Backend - Routes package
-from . import auth, report, upload, ai, pdf, health
+from . import auth, report, upload, pdf, health
+#ai
